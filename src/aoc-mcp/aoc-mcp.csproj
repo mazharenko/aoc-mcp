@@ -6,6 +6,8 @@
     <RootNamespace>mazharenko.aoc_mcp</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <EnableSdkContainerSupport>true</EnableSdkContainerSupport>
+    <ContainerRepository>mazharenko/aoc-mcp</ContainerRepository>
   </PropertyGroup>
 
   <ItemGroup>

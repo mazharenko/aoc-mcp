@@ -1,0 +1,38 @@
+name: Publish Docker image
+
+on:
+  push:
+    tags: 
+      - "[0-9]+.[0-9]+.[0-9]+*"
+
+permissions:
+  contents: read
+  packages: write
+  
+jobs:
+  publish_image:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+          
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Publish Image
+        run: >-
+          dotnet publish src/aoc-mcp/aoc-mcp.csproj
+          --os linux --arch x64
+          /t:PublishContainer -p ContainerRegistry=ghcr.io
+          -p ContainerImageTags='"latest;${{ github.ref_name }}"'
+        
+

@@ -9,7 +9,10 @@ internal class AoCClient(string sessionToken, IHttpClientFactory httpClientFacto
 		var httpClient = httpClientFactory.CreateClient();
 		httpClient.BaseAddress = new Uri("https://adventofcode.com");
 		httpClient.DefaultRequestHeaders.Add("cookie", "session=" + sessionToken);
-		httpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"aoc-mcp/{ThisAssembly.Info.Version} (+via github.com/mazharenko/aoc-mcp by mazharenko.a@gmail.com)");
+#pragma warning disable CS0618 // Type or member is obsolete
+		const string version = ThisAssembly.Info.Version;
+#pragma warning restore CS0618 // Type or member is obsolete
+		httpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"aoc-mcp/{version} (+via github.com/mazharenko/aoc-mcp by mazharenko.a@gmail.com)");
 		return httpClient;
 	}
 
