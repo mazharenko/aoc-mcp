@@ -13,3 +13,21 @@ However, building a [self-submitting app](https://github.com/mazharenko/aoc-agen
 - Parameters: `year` (int)
 - Returns: `Stars` (int)
 
+## Use this MCP Server
+
+```json
+{
+  "mcpServers": {
+    "aoc": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "ghcr.io/mazharenko/aoc-mcp",
+        "<session>"
+      ]
+    }
+  }
+}
+```
