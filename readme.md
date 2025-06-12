@@ -13,7 +13,11 @@ However, building a [self-submitting app](https://github.com/mazharenko/aoc-agen
 - Parameters: `year` (int)
 - Returns: `Stars` (int)
 
+
 ## Use this MCP Server
+
+
+[![Install with Docker in VS Code](https://img.shields.io/badge/VS_Code-install-0098FF?logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=aoc&config=%7B%22command%22%3A%22docker%22%2C%22args%22%3A%5B%22run%22%2C%22-i%22%2C%22--rm%22%2C%22-e%22%2C%22SESSION_COOKIE%22%2C%22ghcr.io%2Fmazharenko%2Faoc-mcp%22%5D%2C%22env%22%3A%7B%22SESSION_COOKIE%22%3A%22%3Csession%3E%22%7D%7D)
 
 ```json
 {
@@ -24,9 +28,13 @@ However, building a [self-submitting app](https://github.com/mazharenko/aoc-agen
         "run",
         "-i",
         "--rm",
-        "ghcr.io/mazharenko/aoc-mcp",
-        "<session>"
-      ]
+        "-e",
+        "SESSION_COOKIE",
+        "ghcr.io/mazharenko/aoc-mcp"
+      ],
+      "env": {
+        "SESSION_COOKIE": "<session>"
+      }
     }
   }
 }
