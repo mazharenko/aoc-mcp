@@ -1,8 +1,9 @@
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 
 namespace mazharenko.aoc_mcp.Client;
 
-internal class AoCClient(string sessionToken, IHttpClientFactory httpClientFactory) : IAoCClient
+internal class AoCClient(string sessionToken, IHttpClientFactory httpClientFactory, ILogger<AoCClient> logger) : IAoCClient
 {
 	private HttpClient CreateHttpClient()
 	{
@@ -23,34 +24,68 @@ internal class AoCClient(string sessionToken, IHttpClientFactory httpClientFacto
 	
 	public async Task<Stats> GetDayResults(int year)
 	{
+		logger.LogInformation("Starting to collect AoC stats for year {Year}", year);
 		var stats = new Stats();
-		await foreach (var (day, part) in _GetDayResults(year)) 
-			stats.Solved(day, part);
-		return stats;
+		try
+		{
+			await foreach (var (day, part) in _GetDayResults(year))
+			{
+				stats.Solved(day, part);
+				logger.LogDebug("Recorded star for Day {Day} Part {Part}", day, part);
+			}
+			logger.LogInformation("Completed collecting stats for year {Year}. Total stars: {Stars}", year, stats.Stars);
+			return stats;
+		}
+		catch (Exception ex)
+		{
+			logger.LogError(ex, "Failed to collect stats for year {Year}", year);
+			throw;
+		}
 	}
 	
 	private async IAsyncEnumerable<(int day, int part)> _GetDayResults(int year)
 	{
+		logger.LogInformation("Fetching AoC progress for year {Year}", year);
+		
 		using var httpClient = CreateHttpClient();
-		var response = await httpClient.GetStringAsync($"/{year}");
+		string response;
+		try 
+		{
+			response = await httpClient.GetStringAsync($"/{year}");
+			logger.LogDebug("Received response from AoC for year {Year}, length: {Length}", year, response.Length);
+		}
+		catch (Exception ex)
+		{
+			logger.LogError(ex, "Failed to fetch AoC progress for year {Year}", year);
+			throw;
+		}
+		
 		var statParsed = DayRegex.Matches(response);
+		logger.LogInformation("Found {Count} day matches in response", statParsed.Count);
 		
 		foreach (Match match in statParsed)
 		{
 			var day = int.Parse(match.Groups["day"].Value);
-			switch (match.Groups["stars"].Value)
+			var stars = match.Groups["stars"].Value;
+			logger.LogDebug("Processing Day {Day}, stars: '{Stars}'", day, stars);
+			
+			switch (stars)
 			{
 				case "":
+					logger.LogDebug("Day {Day}: No stars", day);
 					break;
 				case "one star":
+					logger.LogDebug("Day {Day}: One star", day);
 					yield return (day, 1);
 					break;
 				case "two stars":
+					logger.LogDebug("Day {Day}: Two stars", day);
 					yield return (day, 1);
 					yield return (day, 2);
 					break;
 				default:
-					throw new InvalidOperationException($"Could not interpret day results: {match.Value}");
+					logger.LogError("Could not interpret day results for Day {Day}: {Match}", day, match.Value);
+					throw new InvalidOperationException($"Could not interpret day results for Day {day}: {match.Value}");
 			}
 		}
 	}

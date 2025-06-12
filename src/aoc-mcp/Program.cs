@@ -1,17 +1,32 @@
 ﻿using mazharenko.aoc_mcp.Client;
+using mazharenko.aoc_mcp.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
+var session = args.FirstOrDefault() ?? Environment.GetEnvironmentVariable("SESSION_COOKIE");
+if (session == null) throw new ArgumentNullException(nameof(session));
 
 var builder = Host.CreateEmptyApplicationBuilder(settings: null);
 builder.Services
 	.AddHttpClient()
 	.AddSingleton<IAoCClient>(serviceProvider =>
-		new AoCClient(args[0], serviceProvider.GetRequiredService<IHttpClientFactory>())
+		new AoCClient(session, serviceProvider.GetRequiredService<IHttpClientFactory>(), serviceProvider.GetRequiredService<ILogger<AoCClient>>())
 	);
+
+
+builder.Services.AddSingleton<IConfigureOptions<LoggerFilterOptions>, SetLoggingLevelHandler>();
+
+builder.Logging.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
 
 builder.Services
 	.AddMcpServer()
 	.WithStdioServerTransport()
-	.WithToolsFromAssembly();
+	.WithToolsFromAssembly()
+	.WithSetLoggingLevelHandler((ctx, ct) 
+		=> ctx.Services!.GetRequiredService<SetLoggingLevelHandler>().UpdateLogLevel(ctx));
 
-await builder.Build().RunAsync();
+
+var host = builder.Build();
+await host.RunAsync();

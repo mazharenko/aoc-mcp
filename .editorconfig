@@ -10,3 +10,7 @@ indent_style = tab
 indent_size = tab
 tab_width = 4
 max_line_length = 150
+# The switch expression does not handle some values of its input type (it is not exhaustive) involving an unnamed enum value.
+dotnet_diagnostic.CS8524.severity = none
+# The switch expression does not handle all possible inputs (it is not exhaustive)
+dotnet_diagnostic.CS8509.severity = error
