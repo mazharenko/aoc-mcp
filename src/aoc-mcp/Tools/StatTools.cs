@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using mazharenko.aoc_mcp.Client;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol;
 using ModelContextProtocol.Server;
 
 namespace mazharenko.aoc_mcp.Tools;
@@ -27,8 +28,7 @@ public class StatTools
 		}
 		catch (Exception ex)
 		{
-			logger.LogError(ex, "Error fetching AoC progress for year {Year}", year);
-			throw;
+			throw new McpException(ex.Message, ex);
 		}
 	}
 }
