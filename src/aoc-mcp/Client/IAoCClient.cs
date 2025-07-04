@@ -1,15 +1,5 @@
 namespace mazharenko.aoc_mcp.Client;
 
-public abstract record SubmissionResult
-{
-	private SubmissionResult(){}
-	public record Correct : SubmissionResult;
-	public record Incorrect : SubmissionResult;
-	public record TooLow : SubmissionResult;
-	public record TooHigh : SubmissionResult;
-	public record TooRecently(TimeSpan LeftToWait) : SubmissionResult;
-}
-
 public class Stats(ISet<(int, int)> solvedParts)
 {
 	public Stats() : this(new HashSet<(int, int)>())
@@ -51,5 +41,5 @@ public class Stats(ISet<(int, int)> solvedParts)
 public interface IAoCClient 
 {
 	Task<Stats> GetDayResults(int year);
-	Task<SubmissionResult> SubmitAnswer(int year, int day, int part, string answer);
+	Task<string> SubmitAnswer(int year, int day, int part, string answer);
 }

@@ -1,4 +1,6 @@
 using System.Text.RegularExpressions;
+using AngleSharp.Dom;
+using AngleSharp.Html.Parser;
 using Microsoft.Extensions.Logging;
 
 namespace mazharenko.aoc_mcp.Client;
@@ -22,9 +24,8 @@ internal class AoCClient(string sessionToken, IHttpClientFactory httpClientFacto
 		aria-label="Day (?<day>\d+)(, (?<stars>((one star)|(two stars))?))?"
 		""");
 	
-	public async Task<SubmissionResult> SubmitAnswer(int year, int day, int part, string answer)
+	public async Task<string> SubmitAnswer(int year, int day, int part, string answer)
 	{
-		// todo try LLM sampling?
 		logger.LogInformation("Submitting answer for Year {Year} Day {Day} Part {Part}", year, day, part);
 		var form = new FormUrlEncodedContent(
 			new Dictionary<string, string>
@@ -39,54 +40,14 @@ internal class AoCClient(string sessionToken, IHttpClientFactory httpClientFacto
 		response.EnsureSuccessStatusCode();
 		var content = await response.Content.ReadAsStringAsync();
 		logger.LogDebug("Received submission response, length: {Length}", content.Length);
-		if (content.Contains("That's the right answer!"))
-		{
-			logger.LogInformation("Submission for Year {Year} Day {Day} Part {Part} was correct", year, day, part);
-			return new SubmissionResult.Correct();
-		}
-		if (content.Contains("too high"))
-		{
-			logger.LogInformation("Submission for Year {Year} Day {Day} Part {Part} was too high", year, day, part);
-			return new SubmissionResult.TooHigh();
-		}
-		if (content.Contains("too low"))
-		{
-			logger.LogInformation("Submission for Year {Year} Day {Day} Part {Part} was too low", year, day, part);
-			return new SubmissionResult.TooLow();
-		}
-		if (content.Contains("That's not the right answer"))
-		{
-			logger.LogInformation("Submission for Year {Year} Day {Day} Part {Part} was incorrect", year, day, part);
-			return new SubmissionResult.Incorrect();
-		}
-		if (content.Contains("You don't seem to be solving the right level."))
-		{
-			logger.LogDebug("Level appears to be already solved, checking stats");
-			if ((await GetDayResults(year)).IsSolved(day, part))
-			{
-				logger.LogInformation("Confirmed Year {Year} Day {Day} Part {Part} was already solved", year, day, part);
-				return new SubmissionResult.Correct();
-			}
-			logger.LogError("Could not interpret submission result for Year {Year} Day {Day} Part {Part}", year, day, part);
+
+		var html = new HtmlParser().ParseDocument(content);
+		var node = html.DocumentElement.QuerySelector("main > article > p");
+			
+		if (node is null)
 			throw new InvalidOperationException("Could not interpret the submission result");
-		}
-		var timeLeftRegex = new Regex(@"You have ((?<min>\d+)m )?((?<sec>\d+)s )?left");
-		var timeLeftMatch = timeLeftRegex.Match(content);
-		if (timeLeftMatch.Success)
-		{
-			var min = timeLeftMatch.Groups["min"].Success
-				? int.Parse(timeLeftMatch.Groups["min"].Value)
-				: 0;
-			var sec = timeLeftMatch.Groups["sec"].Success
-				? int.Parse(timeLeftMatch.Groups["sec"].Value)
-				: 0;
-			var waitTime = new TimeSpan(0, min, sec);
-			logger.LogInformation("Submission blocked - must wait {Minutes:00}:{Seconds:00} before next attempt", waitTime.Minutes, waitTime.Seconds);
-			return new SubmissionResult.TooRecently(waitTime);
-		}
-		
-		logger.LogError("Could not interpret submission result for Year {Year} Day {Day} Part {Part}", year, day, part);
-		throw new InvalidOperationException("Could not interpret the submission result");
+
+		return node.Text();
 	}
 	public async Task<Stats> GetDayResults(int year)
 	{
