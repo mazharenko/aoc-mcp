@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
@@ -24,7 +25,7 @@ internal class AoCClient(string sessionToken, IHttpClientFactory httpClientFacto
 		aria-label="Day (?<day>\d+)(, (?<stars>((one star)|(two stars))?))?"
 		""");
 	
-	public async Task<string> SubmitAnswer(int year, int day, int part, string answer)
+	public async Task<string> SubmitAnswer(int year, int day, int part, string answer, CancellationToken cancellationToken)
 	{
 		logger.LogInformation("Submitting answer for Year {Year} Day {Day} Part {Part}", year, day, part);
 		var form = new FormUrlEncodedContent(
@@ -36,12 +37,12 @@ internal class AoCClient(string sessionToken, IHttpClientFactory httpClientFacto
 		);
 		using var httpClient = CreateHttpClient();
 		logger.LogDebug("Sending submission request to AoC");
-		var response = await httpClient.PostAsync($"/{year}/day/{day}/answer", form);
+		var response = await httpClient.PostAsync($"/{year}/day/{day}/answer", form, cancellationToken);
 		response.EnsureSuccessStatusCode();
-		var content = await response.Content.ReadAsStringAsync();
+		var content = await response.Content.ReadAsStringAsync(cancellationToken);
 		logger.LogDebug("Received submission response, length: {Length}", content.Length);
 
-		var html = new HtmlParser().ParseDocument(content);
+		var html = await new HtmlParser().ParseDocumentAsync(content, cancellationToken);
 		var node = html.DocumentElement.QuerySelector("main > article > p");
 			
 		if (node is null)
@@ -49,13 +50,13 @@ internal class AoCClient(string sessionToken, IHttpClientFactory httpClientFacto
 
 		return node.Text();
 	}
-	public async Task<Stats> GetDayResults(int year)
+	public async Task<Stats> GetDayResults(int year, CancellationToken cancellationToken)
 	{
 		logger.LogInformation("Starting to collect AoC stats for year {Year}", year);
 		var stats = new Stats();
 		try
 		{
-			await foreach (var (day, part) in _GetDayResults(year))
+			await foreach (var (day, part) in _GetDayResults(year, cancellationToken))
 			{
 				stats.Solved(day, part);
 				logger.LogDebug("Recorded star for Day {Day} Part {Part}", day, part);
@@ -70,7 +71,7 @@ internal class AoCClient(string sessionToken, IHttpClientFactory httpClientFacto
 		}
 	}
 	
-	private async IAsyncEnumerable<(int day, int part)> _GetDayResults(int year)
+	private async IAsyncEnumerable<(int day, int part)> _GetDayResults(int year, [EnumeratorCancellation] CancellationToken cancellationToken)
 	{
 		logger.LogInformation("Fetching AoC progress for year {Year}", year);
 		
@@ -78,7 +79,7 @@ internal class AoCClient(string sessionToken, IHttpClientFactory httpClientFacto
 		string response;
 		try 
 		{
-			response = await httpClient.GetStringAsync($"/{year}");
+			response = await httpClient.GetStringAsync($"/{year}", cancellationToken);
 			logger.LogDebug("Received response from AoC for year {Year}, length: {Length}", year, response.Length);
 		}
 		catch (Exception ex)

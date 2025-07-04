@@ -21,7 +21,7 @@ public class StatTools
 		{
 			logger.LogInformation("Fetching AoC progress for year {Year}", year);
 			
-			var stats = await aocClient.GetDayResults(year);
+			var stats = await aocClient.GetDayResults(year, cancellationToken);
 			logger.LogInformation("Retrieved stats for year {Year}: {Stars} stars", year, stats.Stars);
 			
 			return new ToolStats(stats.Stars);

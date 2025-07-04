@@ -40,6 +40,6 @@ public class Stats(ISet<(int, int)> solvedParts)
 
 public interface IAoCClient 
 {
-	Task<Stats> GetDayResults(int year);
-	Task<string> SubmitAnswer(int year, int day, int part, string answer);
+	Task<Stats> GetDayResults(int year, CancellationToken cancellationToken);
+	Task<string> SubmitAnswer(int year, int day, int part, string answer, CancellationToken cancellationToken);
 }

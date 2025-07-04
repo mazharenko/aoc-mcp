@@ -28,7 +28,7 @@ public class SubmissionTools(IAoCClient aocClient, ILogger<SubmissionTools> logg
 			var progressToken = context.Params?.ProgressToken;
 			while (true)
 			{
-				var submissionText = await aocClient.SubmitAnswer(year, day, part, answer);
+				var submissionText = await aocClient.SubmitAnswer(year, day, part, answer, cancellationToken);
 
 				logger.LogInformation("Received submission result text: {SubmissionResultText}", submissionText);
 				
