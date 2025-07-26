@@ -42,4 +42,5 @@ public interface IAoCClient
 {
 	Task<Stats> GetDayResults(int year, CancellationToken cancellationToken);
 	Task<string> SubmitAnswer(int year, int day, int part, string answer, CancellationToken cancellationToken);
+	Task<string> LoadInput(int year, int day, CancellationToken cancellationToken);
 }

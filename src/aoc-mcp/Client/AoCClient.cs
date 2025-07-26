@@ -24,7 +24,15 @@ internal class AoCClient(string sessionToken, IHttpClientFactory httpClientFacto
 		"""
 		aria-label="Day (?<day>\d+)(, (?<stars>((one star)|(two stars))?))?"
 		""");
-	
+
+	public async Task<string> LoadInput(int year, int day, CancellationToken cancellationToken)
+	{
+		using var httpClient = CreateHttpClient();
+		var response = await httpClient.GetAsync($"/{year}/day/{day}/input", cancellationToken);
+		response.EnsureSuccessStatusCode();
+		return await response.Content.ReadAsStringAsync(cancellationToken);
+	}
+
 	public async Task<string> SubmitAnswer(int year, int day, int part, string answer, CancellationToken cancellationToken)
 	{
 		logger.LogInformation("Submitting answer for Year {Year} Day {Day} Part {Part}", year, day, part);

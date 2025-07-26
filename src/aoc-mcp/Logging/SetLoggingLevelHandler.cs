@@ -8,7 +8,7 @@ namespace mazharenko.aoc_mcp.Logging;
 
 public class SetLoggingLevelHandler : IConfigureOptions<LoggerFilterOptions>
 {
-	private LogLevel _currentLevel = LogLevel.Debug;
+	private LogLevel _currentLevel = LogLevel.None;
 
 	public ValueTask<EmptyResult> UpdateLogLevel(RequestContext<SetLevelRequestParams> ctx)
 	{

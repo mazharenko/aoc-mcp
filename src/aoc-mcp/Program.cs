@@ -18,12 +18,13 @@ builder.Services
 
 builder.Services.AddSingleton<IConfigureOptions<LoggerFilterOptions>, SetLoggingLevelHandler>();
 
-builder.Logging.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
+builder.Logging.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.None);
 
 builder.Services
 	.AddMcpServer()
 	.WithStdioServerTransport()
 	.WithToolsFromAssembly()
+	.WithResourcesFromAssembly()
 	.WithSetLoggingLevelHandler((ctx, ct) 
 		=> ctx.Services!.GetRequiredService<SetLoggingLevelHandler>().UpdateLogLevel(ctx));
 
